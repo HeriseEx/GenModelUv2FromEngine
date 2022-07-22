@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEditor;
+using UnityEditor.Formats.Fbx.Exporter;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -75,44 +76,50 @@ public static class GenModelUv2FromEngine
 
                     m.generateSecondaryUV = true;
                 }
-
-                var originReadableState = m.isReadable; 
-                m.isReadable = true;
+                
                 m.SaveAndReimport();
 
-                var meshUvDic = new Dictionary<Mesh, Vector2[]>();
+                // var meshUvDic = new Dictionary<Mesh, Vector2[]>();
+                //
+                // foreach (var filter in filters)
+                // {
+                //     if (filter.sharedMesh == null)
+                //     {
+                //         continue;
+                //     }
+                //
+                //     if (filter.sharedMesh.uv2 == null || filter.sharedMesh.uv2.Length == 0)
+                //     {
+                //         continue;
+                //     }
+                //
+                //     // var shareMesh = filter.sharedMesh;
+                //     // var newMesh = new Mesh();
+                //     // var combineInstance = new CombineInstance[1];
+                //     // combineInstance[0].mesh = shareMesh;
+                //     // newMesh.CombineMeshes(combineInstance);
+                //     meshUvDic.Add(filter.sharedMesh, filter.sharedMesh.uv2);
+                // }
+
+                // m.generateSecondaryUV = false;
+                // m.SaveAndReimport();
                 
-                foreach (var filter in filters)
-                {
-                    if (filter.sharedMesh == null)
-                    {
-                        continue;
-                    }
-
-                    if (filter.sharedMesh.uv2 == null || filter.sharedMesh.uv2.Length == 0)
-                    {
-                        continue;
-                    }
-
-                    // var shareMesh = filter.sharedMesh;
-                    // var newMesh = new Mesh();
-                    // var combineInstance = new CombineInstance[1];
-                    // combineInstance[0].mesh = shareMesh;
-                    // newMesh.CombineMeshes(combineInstance);
-                    meshUvDic.Add(filter.sharedMesh, filter.sharedMesh.uv2);
-                }
-                m.generateSecondaryUV = false;
-                m.SaveAndReimport();
+                // foreach (var item in meshUvDic)
+                // {
+                //     if (item.Key.vertices.Length != item.Value.Length)
+                //     {
+                //         item.Key.uv2 =  item.Key.uv;
+                //         Debug.LogWarning("Engine Generated Extra Verts . Copy Uv => Uv2 .");
+                //         continue;
+                //     }
+                //
+                //     item.Key.uv2 = item.Value;
+                // }
                 
-                foreach (var item in meshUvDic)
-                {
-                    if (item.Key.vertices.Length != item.Value.Length)
-                    {
-                        continue;
-                    }
-
-                    item.Key.uv2 = item.Value;
-                }
+                // 直接覆盖创建一个拷贝对象
+                var g = Object.Instantiate(rootGo);
+                ModelExporter.ExportObject(path, g);
+                Object.DestroyImmediate(g);
             }
             Debug.Log(path);
         }
@@ -120,13 +127,13 @@ public static class GenModelUv2FromEngine
     }
 
     [MenuItem("GameObject/GenerateUV2", false, priority = 30)]
-    private static void Test()
+    private static void ModelGenerateUV2()
     {
-        // SetUV(Selection.gameObjects);
+        SetUV(Selection.gameObjects);
     }
 
     [MenuItem("Assets/GenerateUV2", false, priority = 30)]
-    private static void Test1()
+    private static void FolderGenerateUV2()
     {
         var assetsParentPath = Directory.GetParent(Application.dataPath)?.ToString();
         if (string.IsNullOrEmpty(assetsParentPath))
